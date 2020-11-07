@@ -4,7 +4,7 @@ from os import listdir
 CHECK_DIR = "target_sources"
 
 
-class SourceCollection:
+class SourceCollection():
     def __init__(self):
         self.sources = {}
         self.update_sources()

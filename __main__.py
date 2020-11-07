@@ -1,14 +1,9 @@
+import trio
 import kivy
-from kivy.app import App
-from kivy.uix.label import Label
+kivy.require('2.0.0')
 
-kivy.require('1.11.1')
-
-
-class Test(App):
-    def build(self):
-        return Label(text='Sup')
+from AsyncApp import MainUIApp
 
 
 if __name__ == '__main__':
-    Test().run()
+    trio.run(MainUIApp().app_func)

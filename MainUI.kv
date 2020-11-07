@@ -1,0 +1,27 @@
+#:kivy 2.0.0
+
+<MainUI>:
+	start_stop_wid: btn_start_stop
+	listing_layout: grid_main
+
+	BoxLayout:
+		orientation: 'horizontal'
+	
+		ToggleButton:
+			id: btn_start_stop
+			group: 'controls'
+			text: 'start'
+			on_press: print(self.text, "pressed")
+			on_release: root.on_start_release()
+			on_state: print(self.text, f"State: {self.state}")
+			
+		ToggleButton:
+			id: btn_reload
+			group: 'controls'
+			text: 'reload'
+			on_release: root.on_reload_release()
+	
+	GridLayout:
+		id: grid_main
+		cols: 3
+		
