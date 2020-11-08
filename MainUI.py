@@ -39,6 +39,7 @@ class MainUI(BoxLayout):
         for name in self.widget_load_list:
             self.loaded_widget_reference.append(InnerWidget(name, self.send_ch))
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
+            print(self.loaded_widget_reference[-1])
 
     def start_action(self):
         pass

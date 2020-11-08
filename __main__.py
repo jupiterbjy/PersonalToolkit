@@ -2,8 +2,10 @@ import trio
 import kivy
 kivy.require('2.0.0')
 
-from AsyncApp import MainUIApp
+
+class A:
+    def _what(self):
+        pass
 
 
-if __name__ == '__main__':
-    trio.run(MainUIApp().app_func)
+A()._what()
