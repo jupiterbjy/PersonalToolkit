@@ -3,6 +3,7 @@ from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.behaviors import ButtonBehavior
+from kivy.graphics import Color, Rectangle
 from kivy.uix.label import Label
 
 
@@ -32,6 +33,19 @@ class InnerWidget(ButtonBehavior, BoxLayout):
 
     def on_press(self):
         self.task_send_ch.send_nowait(self.update)
+
+    def update_bg(self, color):
+        print("Update background called")
+        self.canvas.before.clear()
+        with self.canvas.before:
+            Color(*color)
+            self.rect = Rectangle(pos=self.pos, size=self.size)
+
+        self.bind(pos=self.update_rect, size=self.update_rect)
+
+    def update_rect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
 
 
 if __name__ == '__main__':

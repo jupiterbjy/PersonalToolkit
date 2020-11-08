@@ -29,6 +29,7 @@ class AsyncWidget(ButtonBehavior, BoxLayout):
 
         self.countdown = 3
         self.coroutine_running = False
+        self.rect = None
 
         super().__init__(**kwargs)
 
@@ -41,7 +42,7 @@ class AsyncWidget(ButtonBehavior, BoxLayout):
 
         self.bind(pos=self.update_rect, size=self.update_rect)
 
-    def update_rect(self):
+    def update_rect(self, *args):
         self.rect.pos = self.pos
         self.rect.size = self.size
 
