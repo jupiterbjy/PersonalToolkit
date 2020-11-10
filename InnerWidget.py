@@ -19,6 +19,8 @@ class InnerWidget(ButtonBehavior, BoxLayout):
         self.name = name
         self.countdown = 5
 
+        self.rect = None
+
         super().__init__(**kwargs)
 
     async def update(self):
