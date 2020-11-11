@@ -1,6 +1,5 @@
 import datetime
-import trio
-
+from . import ScheduledTask
 
 """
 Calculates how many days / much percent point is left until end of
@@ -10,27 +9,33 @@ mandatory military service.
 
 # TODO: allow each scripts to have respective .kv files.
 
+class TaskObject(ScheduledTask):
 
-class Parameter:
-    """
-    Provide housing for parameters that app will read and prompt users to fill out.
-    """
-    retire: str = '2020-12-22'
-    format: str = '%Y-%m-%d'
+    def __init__(self):
+        super().__init__()
+        self.parameters = {
+            "Enroll": "2019-07-15",
+            "Retire": "2020-12-22",
+            "Format": "%Y-%m-%d"
+        }
 
+    async def run_task(self):
+        today = datetime.datetime.now()
 
-async def task(mem_send: trio.MemorySendChannel):
-    """
-    Task to be scheduled on every cycle. All should be async functions regardless of
-    whether function performs IO operations or not. Use MemChannel to send back result.
+        try:
+            enroll, retire = self.storage["enroll_date"], self.storage["retire_date"]
 
-    For now, all results will be directly posted to Label object.
-    """
+        except KeyError:  # Not calculated
+            retire = datetime.datetime.strptime(
+                self.parameters["Format"],
+                self.parameters["Retire"]
+            )
+            enroll = datetime.datetime.strptime(
+                self.parameters["Format"],
+                self.parameters["Retire"]
+            )
+            self.storage["service_duration"] = retire - enroll
 
-    today = datetime.datetime.now()
-    target = datetime.datetime.strptime(Parameter.format, Parameter.retire)
+            self.storage["enroll_date"], self.storage["retire_date"] = enroll, retire
 
-    diff = (target - today).seconds
-
-    await mem_send.send(diff)
-
+        self.output = f"{(retire - today).seconds / self.storage['service_duration'].seconds:0.4f}"
