@@ -6,18 +6,19 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import Color, Rectangle
 from kivy.uix.label import Label
 
+from Schedules import ScheduledTask
+
 
 class InnerWidget(ButtonBehavior, BoxLayout):
     label_top = ObjectProperty()
-    label_mid = ObjectProperty()
     label_bottom = ObjectProperty()
 
-    def __init__(self, name, task_queue: trio.MemorySendChannel, **kwargs):
-        self.task_send_ch = task_queue
+    def __init__(self, task_object: ScheduledTask, mem_send: trio.MemorySendChannel, **kwargs):
+        self.task_send_ch = mem_send
         self.orientation = 'vertical'
 
-        self.name = name
-        self.countdown = 5
+        self.task_object = task_object
+        self.name = self.task_object.name
 
         self.rect = None
 
@@ -34,10 +35,11 @@ class InnerWidget(ButtonBehavior, BoxLayout):
         self.label_mid.text = 'timer Stop'
 
     def on_press(self):
-        self.task_send_ch.send_nowait(self.update)
+        print(f"Press event on {self.name}")
+        # self.task_send_ch.send_nowait(self.update)
 
     def update_bg(self, color):
-        print("Update background called")
+        print(f"Update background called on {self.name}")
         self.canvas.before.clear()
         with self.canvas.before:
             Color(*color)

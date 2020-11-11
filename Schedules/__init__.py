@@ -10,6 +10,7 @@ class ScheduledTask:
         """
         Script will check output periodically.
         """
+        self.name = "NoName"
         self.output = "Empty"
         self.storage = dict()
         self.parameters = dict()

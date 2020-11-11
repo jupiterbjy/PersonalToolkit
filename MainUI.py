@@ -8,6 +8,7 @@ from kivy.uix.button import Button
 from kivy.properties import ObjectProperty, StringProperty
 
 from InnerWidget import InnerWidget
+import Loader
 
 
 class MainUI(BoxLayout):
@@ -32,12 +33,12 @@ class MainUI(BoxLayout):
             self.stop_action()
 
     def on_reload_release(self):
-        print('a')
-        self.listing_layout.clear_widgets()
-        self.loaded_widget_reference.clear()  # Drop reference later!
+        self.listing_layout.clear_widgets()  # Drop widget first
+        self.loaded_widget_reference.clear()  # Then drop reference!
 
-        for name in self.widget_load_list:
-            self.loaded_widget_reference.append(InnerWidget(name, self.send_ch))
+        for task_object in Loader.fetch_scripts():
+
+            self.loaded_widget_reference.append(InnerWidget(task_object, self.send_ch))
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
             print(self.loaded_widget_reference[-1])
 

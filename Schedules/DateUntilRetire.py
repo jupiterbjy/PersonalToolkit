@@ -13,6 +13,7 @@ class TaskObject(ScheduledTask):
 
     def __init__(self):
         super().__init__()
+        self.name = "Service %"
         self.parameters = {
             "Enroll": "2019-07-15",
             "Retire": "2020-12-22",
