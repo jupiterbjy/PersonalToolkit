@@ -24,15 +24,8 @@ class InnerWidget(ButtonBehavior, BoxLayout):
 
         super().__init__(**kwargs)
 
-    async def update(self):
-        self.label_mid.text = "timer start"
-
-        for i in range(self.countdown):
-            self.label_bottom.text = str(self.countdown - i)
-            await trio.sleep(1)
-        self.label_bottom.text = '0'
-
-        self.label_mid.text = 'timer Stop'
+    def update(self):
+        self.task_send_ch.send_nowait(self.task_object.run_task)
 
     def on_press(self):
         print(f"Press event on {self.name}")

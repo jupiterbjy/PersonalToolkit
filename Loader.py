@@ -5,16 +5,10 @@ import importlib
 import logging
 
 
-LOGGER = logging.getLogger("DEBUG_")
 TASK_LOCATION = "Schedules"
 LOCATION = dirname(abspath(__file__)) + "/" + TASK_LOCATION
 OBJECT_NAME = "TaskObject"
-
-_handler = logging.StreamHandler()
-_handler.setLevel("DEBUG")
-_handler.setFormatter(logging.Formatter("[--%(levelname)s--] %(message)s"))
-LOGGER.addHandler(_handler)
-LOGGER.setLevel("DEBUG")
+LOGGER = logging.getLogger("UI_DEBUG")
 
 
 # TODO: look for proper type hinting
