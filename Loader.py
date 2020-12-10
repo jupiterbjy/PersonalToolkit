@@ -2,23 +2,36 @@ from os.path import abspath, dirname
 from os import listdir
 from typing import List
 import importlib
+import logging
 
-LOCATION = dirname(abspath(__file__)) + "/Schedules/"
+
+LOGGER = logging.getLogger("DEBUG_")
+TASK_LOCATION = "Schedules"
+LOCATION = dirname(abspath(__file__)) + "/" + TASK_LOCATION
 OBJECT_NAME = "TaskObject"
+
+_handler = logging.StreamHandler()
+_handler.setLevel("DEBUG")
+_handler.setFormatter(logging.Formatter("[--%(levelname)s--] %(message)s"))
+LOGGER.addHandler(_handler)
+LOGGER.setLevel("DEBUG")
 
 
 # TODO: look for proper type hinting
 
 
 def fetch_scripts() -> List:
-    print("Loader looking for scripts inside", LOCATION)
+    LOGGER.debug(f"Loader looking for scripts inside {LOCATION}")
 
-    sources = [f for f in listdir(LOCATION) if f.endswith(".py")]
-    sources.remove("__init__.py")
+    sources = [f.removesuffix(".py") for f in listdir(LOCATION) if f.endswith(".py")]
+    sources.remove("__init__")
+
+    LOGGER.debug(str(sources))
 
     # FIX_NOW = perform relative import inside Schedules.
 
-    task_objects = [getattr(importlib.import_module(fn), OBJECT_NAME)() for fn in sources]
+    task_objects = [getattr(importlib.import_module(f"{TASK_LOCATION}.{fn}"), OBJECT_NAME)()
+                    for fn in sources]
     return task_objects
 
     # TODO: support dynamic reload of script in folder.
