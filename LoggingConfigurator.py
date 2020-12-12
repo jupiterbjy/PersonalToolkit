@@ -24,27 +24,8 @@ def log_caller():
 
 class CallerLoggedLogger:
     """
-    >>> a = CallerLoggedLogger()
-
-    >>> a.debug('this is debug')  # prints on stderr, so no output to stdout.
-
-    >>> a.warning('this is warning')  # and so on.
-
-    >>> "debug" in dir(a)
-    True
-
-    >>> "warning" in dir(a)
-    True
-
-    >>> "critical" in dir(a)
-    False
-
-    >>> def tester():
-    ...     a.warning("<-- this guy called me!")
-    ...
-
-    >>> tester()  # testing if warning is called out properly.
-
+    Proxy object for logger.
+    Provides same interface to original logger, and attributes are added or decorated in lazy manner.
     """
 
     def __init__(self, identifier=("<", ">")):
@@ -56,10 +37,10 @@ class CallerLoggedLogger:
         except AttributeError:
             raise
 
-        setattr(self, item, self.set_decorated_attr(target))
+        setattr(self, item, self.decorate_logging(target))
         return getattr(self, item)
 
-    def set_decorated_attr(self, logging_function, ):
+    def decorate_logging(self, logging_function, ):
 
         def inner(msg, *args, **kwargs):
             caller = get_caller_stack_name(depth=2)
@@ -72,5 +53,30 @@ logger = CallerLoggedLogger()
 
 
 if __name__ == '__main__':
+    def test():
+        """
+        >>> a = CallerLoggedLogger()
+
+        >>> a.debug('this is debug')  # prints on stderr, so no output to stdout.
+
+        >>> a.warning('this is warning')  # and so on.
+
+        >>> "debug" in dir(a)
+        True
+
+        >>> "warning" in dir(a)
+        True
+
+        >>> "critical" in dir(a)
+        False
+
+        >>> def tester():
+        ...     a.warning("<-- this guy called me!")
+        ...
+
+        >>> tester()  # testing if warning is called out properly.
+
+        """
+
     import doctest
     doctest.testmod(verbose=True)
