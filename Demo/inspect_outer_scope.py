@@ -4,7 +4,8 @@ import inspect
 """
 Python 3.9.1 (tags/v3.9.1:1e5d33e, Dec  7 2020, 17:08:21) [MSC v.1927 64 bit (AMD64)] on win32
 
-Doctest of extracting outer, or current scope name.
+Doctest of extracting outer, or current scope name on both async/sync colored functions.
+Not sure if asyncio also does same for this case.
 """
 
 
