@@ -1,4 +1,6 @@
 import trio
+
+# Kivy imports
 from kivy.app import App
 from kivy.lang.builder import Builder
 from kivy.uix.floatlayout import FloatLayout
@@ -15,7 +17,7 @@ from typing import List
 from Schedules import ScheduledTask
 
 # Temporary
-from LoggingConfigurator import LOGGER
+from LoggingConfigurator import logger
 
 
 class MainUI(BoxLayout):
@@ -32,7 +34,7 @@ class MainUI(BoxLayout):
         self.loaded_widget_reference: List[InnerWidget] = []
 
     def on_start_release(self):
-        LOGGER.debug("Press Event on Start")
+        logger.debug("Press Event on Start")
         if self.start_stop_wid.state == 'down':
             self.start_stop_wid.text = 'stop'
             self.start_action()
@@ -41,7 +43,11 @@ class MainUI(BoxLayout):
             self.stop_action()
 
     def on_reload_release(self):
-        LOGGER.debug("Press Event on Reload")
+        """
+        Clear and re-check python scripts in Schedules module and load them.
+        :return:
+        """
+        logger.debug("Press Event on Reload")
         self.listing_layout.clear_widgets()  # Drop widget first
         self.loaded_widget_reference.clear()  # Then drop reference!
 
@@ -49,14 +55,20 @@ class MainUI(BoxLayout):
 
             self.loaded_widget_reference.append(InnerWidget(task_object, self.send_ch))
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
-            LOGGER.debug(f"Last added: {self.loaded_widget_reference[-1]}")
+            logger.debug(f"Last added: {self.loaded_widget_reference[-1]}")
 
     def start_action(self):
+        """
+        Start scheduling execution of Task objects.
+        """
         for widget in self.loaded_widget_reference:
-            LOGGER.debug(f"Starting task {widget}")
+            logger.debug(f"Starting task {widget}")
             widget.update()
 
     def stop_action(self):
+        """
+        Cancel the trio.CancelScope, stopping re-scheduling and execution of Task objects.
+        """
         pass
 
 
@@ -66,9 +78,15 @@ class MainUIApp(App):
         super().__init__(**kwargs)
         self.nursery: trio.Nursery = None
         self.send_ch, self.recv_ch = trio.open_memory_channel(500)
+        self.cancel_scope = trio.CancelScope()
+        self.running_tasks = []
 
     def build(self):
         return MainUI(self.send_ch)
+
+    def cancel_tasks(self):
+        logger.debug("Canceling Scope!")
+        self.cancel_scope.cancel()
 
     async def app_func(self):
         """Trio wrapper async function."""
@@ -82,17 +100,19 @@ class MainUIApp(App):
                 print("App Stop")
                 nursery.cancel_scope.cancel()
 
-            LOGGER.debug("Starting task receiver")
+            logger.debug("Starting task receiver")
             self.nursery.start_soon(self.wait_for_tasks)
-            LOGGER.debug("Starting UI")
+            logger.debug("Starting UI")
             self.nursery.start_soon(run_wrapper)
 
     async def wait_for_tasks(self):
         self.nursery: trio.Nursery
 
-        async for task in self.recv_ch:
-            self.nursery.start_soon(task)
-            LOGGER.debug(f"Scheduled execution of task {task}")
+        async for task_object in self.recv_ch:
+            task_object: ScheduledTask
+
+            self.nursery.start_soon(task_object.run_task)
+            logger.debug(f"Scheduled execution of task {task_object.name}")
 
 
 if __name__ == '__main__':

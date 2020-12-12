@@ -26,6 +26,9 @@ class CallerLoggedLogger:
     """
     Proxy object for logger.
     Provides same interface to original logger, and attributes are added or decorated in lazy manner.
+
+    # format:
+         <caller> msg
     """
 
     def __init__(self, identifier=("<", ">")):

@@ -1,13 +1,11 @@
 import datetime
-import logging
 from . import ScheduledTask
+from LoggingConfigurator import logger
 
 """
 Calculates how many days / much percent point is left until end of
 mandatory military service.
 """
-
-LOGGER = logging.getLogger("UI_DEBUG")
 
 
 # TODO: allow each scripts to have respective .kv files.
@@ -22,14 +20,15 @@ class TaskObject(ScheduledTask):
             "Retire": "2020-12-22",
             "Format": "%Y-%m-%d"
         }
+        self._storage = dict()
 
     async def run_task(self):
-        LOGGER.debug("Task executed!")
+        logger.debug("Task executed!")
 
         today = datetime.datetime.now()
 
         try:
-            enroll, retire = self.storage["enroll_date"], self.storage["retire_date"]
+            enroll, retire = self._storage["enroll_date"], self._storage["retire_date"]
 
         except KeyError:  # Not calculated
             retire = datetime.datetime.strptime(
@@ -40,10 +39,10 @@ class TaskObject(ScheduledTask):
                 self.parameters["Enroll"],
                 self.parameters["Format"]
             )
-            self.storage["service_duration"] = retire - enroll
-            LOGGER.debug(self.storage["service_duration"])
+            self._storage["service_duration"] = retire - enroll
+            logger.debug(self._storage["service_duration"])
 
-            self.storage["enroll_date"], self.storage["retire_date"] = enroll, retire
+            self._storage["enroll_date"], self._storage["retire_date"] = enroll, retire
 
-        self.output = f"{(retire - today).total_seconds() / self.storage['service_duration'].total_seconds():0.4f}"
+        self.output = f"{(retire - today).total_seconds() / self._storage['service_duration'].total_seconds():0.4f}"
 

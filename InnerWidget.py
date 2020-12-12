@@ -25,7 +25,7 @@ class InnerWidget(ButtonBehavior, BoxLayout):
         super().__init__(**kwargs)
 
     def update(self):
-        self.task_send_ch.send_nowait(self.task_object.run_task)
+        self.task_send_ch.send_nowait(self.task_object)
 
     def on_press(self):
         print(f"Press event on {self.name}")
@@ -44,33 +44,3 @@ class InnerWidget(ButtonBehavior, BoxLayout):
         self.rect.pos = self.pos
         self.rect.size = self.size
 
-
-if __name__ == '__main__':
-    class InnerWidgetApp(App):
-
-        def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.nursery = None
-            self.send_channel, self.recv_channel = trio.open_memory_channel(512)
-
-        def build(self):
-            return InnerWidget('some nice name', self.send_channel)
-
-        async def app_func(self):
-            async with trio.open_nursery() as nursery:
-                self.nursery = nursery
-
-                async def wrapper():
-                    await self.async_run('trio')
-                    nursery.cancel_scope.cancel()
-
-                nursery.start_soon(wrapper)
-                nursery.start_soon(self.wait_for_tasks)
-
-        async def wait_for_tasks(self):
-            async for task in self.recv_channel:
-                print(f"Task recv: {task} Type {type(task)}")
-                self.nursery.start_soon(task)
-
-
-    trio.run(InnerWidgetApp().app_func)

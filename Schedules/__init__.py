@@ -1,3 +1,5 @@
+from typing import Callable
+
 
 class ScheduledTask:
     """
@@ -12,16 +14,14 @@ class ScheduledTask:
         """
         self.name = "NoName"
         self.output = "Empty"
-        self.storage = dict()
-        self.parameters = dict()
+        self._parameters = dict()
 
-    def update_parameter(self, key, value):
+    def update_parameter(self, **kwargs):
         """
         No need to implement fail-safe, only keys in self.parameters will be shown on UI for editing.
         Will clear storage on value changes.
         """
-        self.parameters[key] = value
-        self.storage.clear()
+        self._parameters.update(kwargs)
 
     async def run_task(self):
         """
@@ -29,3 +29,4 @@ class ScheduledTask:
         Will not check return data.
         """
         raise NotImplementedError
+
