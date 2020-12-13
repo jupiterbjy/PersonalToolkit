@@ -1,5 +1,6 @@
 from typing import Callable, Any
 from trio import MemorySendChannel
+from LoggingConfigurator import logger
 
 
 class ScheduledTask:
@@ -30,12 +31,8 @@ class ScheduledTask:
         Schedule execution of self for continuous execution.
         :return:
         """
-        try:
-            return await self._task()
-        except Exception as err:
-            return err
-        finally:
-            await self._task_send_channel.send(self)
+        logger.debug(f"TaskObject <{self.__module__}> scheduling a task")
+        return await self._task()
 
     async def _task(self) -> Any:
         """

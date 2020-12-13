@@ -1,5 +1,6 @@
 import logging
 import inspect
+from functools import wraps
 
 
 _handler = logging.StreamHandler()
@@ -54,6 +55,8 @@ class CallerLoggedLogger:
 
 logger = CallerLoggedLogger()
 
+# def logging_decorator(func):
+#     async def inner()
 
 if __name__ == '__main__':
     def test():

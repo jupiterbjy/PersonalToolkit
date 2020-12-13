@@ -1,4 +1,6 @@
 import datetime
+from typing import Any
+
 from . import ScheduledTask
 from LoggingConfigurator import logger
 
@@ -14,7 +16,7 @@ class TaskObject(ScheduledTask):
 
     def __init__(self):
         super().__init__()
-        self.name = "Service %"
+        self.name = "Served Ratio"
         self.parameters = {
             "Enroll": "2019-07-15",
             "Retire": "2020-12-22",
@@ -22,27 +24,27 @@ class TaskObject(ScheduledTask):
         }
         self._storage = dict()
 
-    async def run_task(self):
+    async def _task(self) -> Any:
         logger.debug("Task executed!")
 
         today = datetime.datetime.now()
 
         try:
-            enroll, retire = self._storage["enroll_date"], self._storage["retire_date"]
+            start, end = self._storage["start_date"], self._storage["end_date"]
 
         except KeyError:  # Not calculated
-            retire = datetime.datetime.strptime(
+            end = datetime.datetime.strptime(
                 self.parameters["Retire"],
                 self.parameters["Format"]
             )
-            enroll = datetime.datetime.strptime(
+            start = datetime.datetime.strptime(
                 self.parameters["Enroll"],
                 self.parameters["Format"]
             )
-            self._storage["service_duration"] = retire - enroll
-            logger.debug(self._storage["service_duration"])
+            self._storage["total_dur"] = (end - start).total_seconds()
+            logger.debug(f"storing value: {self._storage['total_dur']}")
 
-            self._storage["enroll_date"], self._storage["retire_date"] = enroll, retire
-
-        self.output = f"{(retire - today).total_seconds() / self._storage['service_duration'].total_seconds():0.4f}"
-
+            self._storage["start_date"], self._storage["end_date"] = start, end
+            
+        time_passed = (today - start).total_seconds()
+        return f"{(time_passed * 100) / self._storage['total_dur']:.7f}%"

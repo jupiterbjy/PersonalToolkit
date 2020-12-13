@@ -13,7 +13,7 @@ from InnerWidget import InnerWidget
 import Loader
 
 # Typing
-from typing import List
+from typing import List, Callable
 from Schedules import ScheduledTask
 
 # Temporary
@@ -25,13 +25,16 @@ class MainUI(BoxLayout):
     listing_layout: GridLayout = ObjectProperty()
     current_text = StringProperty()
 
-    def __init__(self, send_channel, **kwargs):
+    def __init__(self, send_channel, fn_accept_tasks, fn_stop_task, **kwargs):
         super().__init__(**kwargs)
         self.orientation = 'vertical'
 
         self.send_ch = send_channel
         self.widget_load_list = [str(n) for n in range(4)]
         self.loaded_widget_reference: List[InnerWidget] = []
+
+        self.task_start: Callable = fn_accept_tasks
+        self.task_stop: Callable = fn_stop_task
 
     def on_start_release(self):
         logger.debug("Press Event on Start")
@@ -47,12 +50,13 @@ class MainUI(BoxLayout):
         Clear and re-check python scripts in Schedules module and load them.
         :return:
         """
+        self.stop_action()
+
         logger.debug("Press Event on Reload")
         self.listing_layout.clear_widgets()  # Drop widget first
         self.loaded_widget_reference.clear()  # Then drop reference!
 
         for task_object in Loader.fetch_scripts():
-
             self.loaded_widget_reference.append(InnerWidget(task_object, self.send_ch))
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
             logger.debug(f"Last added: {self.loaded_widget_reference[-1]}")
@@ -61,28 +65,33 @@ class MainUI(BoxLayout):
         """
         Start scheduling execution of Task objects.
         """
+        self.task_start()
         for widget in self.loaded_widget_reference:
             logger.debug(f"Starting task {widget}")
-            widget.update()
+            widget.submit_task()
 
     def stop_action(self):
         """
         Cancel the trio.CancelScope, stopping re-scheduling and execution of Task objects.
         """
-        pass
+        self.task_stop()
 
 
 class MainUIApp(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.nursery: trio.Nursery = None
         self.send_ch, self.recv_ch = trio.open_memory_channel(500)
-        self.cancel_scope = trio.CancelScope()
-        self.running_tasks = []
+
+        self.nursery: trio.Nursery = None
+        self.cancel_scope: trio.CancelScope = None
+        self.event: trio.Event = None
 
     def build(self):
-        return MainUI(self.send_ch)
+        return MainUI(self.send_ch, self.start_tasks, self.cancel_tasks)
+
+    def start_tasks(self):
+        self.event.set()
 
     def cancel_tasks(self):
         logger.debug("Canceling Scope!")
@@ -101,18 +110,32 @@ class MainUIApp(App):
                 nursery.cancel_scope.cancel()
 
             logger.debug("Starting task receiver")
-            self.nursery.start_soon(self.wait_for_tasks)
+            self.nursery.start_soon(self.wait_for_tasks, nursery)
             logger.debug("Starting UI")
             self.nursery.start_soon(run_wrapper)
 
-    async def wait_for_tasks(self):
-        self.nursery: trio.Nursery
+    async def wait_for_tasks(self, nursery: trio.Nursery):
+        async def scheduler():
+            logger.debug("In scheduler")
 
-        async for task_object in self.recv_ch:
-            task_object: ScheduledTask
+            async for task_coroutine in self.recv_ch:
+                nursery.start_soon(task_coroutine)
+                logger.debug(f"Scheduled execution of task <{task_coroutine}>")
 
-            self.nursery.start_soon(task_object.run_task)
-            logger.debug(f"Scheduled execution of task {task_object.name}")
+        while True:
+            logger.debug(f"Now accepting tasks.")
+            self.event = trio.Event()
+            with trio.CancelScope() as cancel_scope:
+                self.cancel_scope = cancel_scope
+                await scheduler()
+            try:
+                while leftover:= self.recv_ch.receive_nowait():
+                    logger.debug(f"Dumping {leftover}")
+            except trio.WouldBlock:
+                pass
+
+            logger.debug(f"Cancel scope closed, waiting to start.")
+            await self.event.wait()
 
 
 if __name__ == '__main__':
