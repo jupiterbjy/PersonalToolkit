@@ -1,7 +1,7 @@
 import trio
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty, StringProperty
+from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import Color, Rectangle
 from kivy.uix.label import Label
@@ -16,6 +16,7 @@ class InnerWidget(ButtonBehavior, BoxLayout):
     """
     label_top = ObjectProperty()
     label_bottom = ObjectProperty()
+    executed_count = StringProperty()
     output = StringProperty()
 
     def __init__(self, task_object: ScheduledTask, mem_send: trio.MemorySendChannel, **kwargs):
@@ -28,6 +29,7 @@ class InnerWidget(ButtonBehavior, BoxLayout):
         self.name = self.task_object.name
 
         self.rect = None
+        self.executed = 0
 
         super().__init__(**kwargs)
 
@@ -35,6 +37,11 @@ class InnerWidget(ButtonBehavior, BoxLayout):
         return f"<{self.__class__.__name__} Object based on {self.task_object.__module__}>"
 
     async def update_output(self):
+        # Update called counter
+        self.executed += 1
+        self.executed_count = str(self.executed)
+
+        # Catch any exceptions
         try:
             self.output = str(await self.task_object.run_task())
         except Exception as err:
@@ -42,6 +49,8 @@ class InnerWidget(ButtonBehavior, BoxLayout):
             self.output = "ERROR"
         finally:
             logger.debug(f"{self} done!")
+
+            # And schedule self again
             await self.task_send_ch.send(self.update_output)
 
     def submit_task(self):
