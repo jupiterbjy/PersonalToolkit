@@ -39,10 +39,8 @@ class MainUI(BoxLayout):
     def on_start_release(self):
         logger.debug("Press Event on Start")
         if self.start_stop_wid.state == 'down':
-            self.start_stop_wid.text = 'stop'
             self.start_action()
         else:
-            self.start_stop_wid.text = 'start'
             self.stop_action()
 
     def on_reload_release(self):
@@ -65,6 +63,7 @@ class MainUI(BoxLayout):
         """
         Start scheduling execution of Task objects.
         """
+        self.start_stop_wid.text = 'stop'
         self.task_start()
         for widget in self.loaded_widget_reference:
             logger.debug(f"Starting task {widget}")
@@ -74,6 +73,7 @@ class MainUI(BoxLayout):
         """
         Cancel the trio.CancelScope, stopping re-scheduling and execution of Task objects.
         """
+        self.start_stop_wid.text = 'start'
         self.task_stop()
 
 
