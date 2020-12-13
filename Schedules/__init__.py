@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Any
 from trio import MemorySendChannel
 from LoggingConfigurator import logger
 

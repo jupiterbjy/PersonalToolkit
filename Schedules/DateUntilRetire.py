@@ -19,7 +19,7 @@ class TaskObject(ScheduledTask):
         self.name = "Served Ratio"
         self.parameters = {
             "Enroll": "2019-07-15",
-            "Retire": "2020-12-22",
+            "Retire": "2020-12-20",
             "Format": "%Y-%m-%d"
         }
         self._storage = dict()

@@ -5,6 +5,7 @@
 	listing_layout: grid_main
 
 	BoxLayout:
+		size_hint: 1, 0.1
 		orientation: 'horizontal'
 	
 		ToggleButton:
@@ -20,11 +21,19 @@
 			on_release: root.on_reload_release()
 	
 	GridLayout:
+		size_hint: 1, 0.9
 		id: grid_main
 		cols: 3
 		
 
 <InnerWidget>:
+	canvas.before:
+		Color:
+			rgba: root.bg_color
+		Rectangle:
+			size: self.size
+			pos: self.pos
+	
 	label_top: inner_label_top
 	label_mid: inner_label_mid
 	label_bottom: inner_label_bottom

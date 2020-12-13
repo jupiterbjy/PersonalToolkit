@@ -11,9 +11,6 @@ LOCATION = abspath(dirname(abspath(__file__)) + "/" + TASK_LOCATION)
 OBJECT_NAME = "TaskObject"
 
 
-# TODO: look for proper type hinting
-
-
 def _load_task_objects(file_name, object_name):
     module = importlib.import_module(f"{TASK_LOCATION}.{file_name}")
     importlib.reload(module)
@@ -29,12 +26,6 @@ def fetch_scripts() -> List:
 
     logger.debug(f"Fetched {sources}")
 
-    # FIX_NOW = perform relative import inside Schedules.
-
     importlib.invalidate_caches()
     task_objects = [_load_task_objects(fn, OBJECT_NAME) for fn in sources]
     return task_objects
-
-    # TODO: support dynamic reload of script in folder.
-
-

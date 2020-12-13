@@ -118,9 +118,11 @@ class MainUIApp(App):
         async def scheduler():
             logger.debug("In scheduler")
 
-            async for task_coroutine in self.recv_ch:
-                nursery.start_soon(task_coroutine)
-                logger.debug(f"Scheduled execution of task <{task_coroutine}>")
+            async with trio.open_nursery() as nursery_sub:
+                async for task_coroutine in self.recv_ch:
+
+                    nursery_sub.start_soon(task_coroutine)
+                    logger.debug(f"Scheduled execution of task <{task_coroutine}>")
 
         while True:
             logger.debug(f"Now accepting tasks.")
@@ -129,7 +131,7 @@ class MainUIApp(App):
                 self.cancel_scope = cancel_scope
                 await scheduler()
             try:
-                while leftover:= self.recv_ch.receive_nowait():
+                while leftover := self.recv_ch.receive_nowait():
                     logger.debug(f"Dumping {leftover}")
             except trio.WouldBlock:
                 pass
