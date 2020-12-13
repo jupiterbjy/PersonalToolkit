@@ -1,4 +1,5 @@
-from typing import Callable
+from typing import Callable, Any
+from trio import MemorySendChannel
 
 
 class ScheduledTask:
@@ -13,7 +14,7 @@ class ScheduledTask:
         Script will check output periodically.
         """
         self.name = "NoName"
-        self.output = "Empty"
+        self._task_send_channel: MemorySendChannel = None
         self._parameters = dict()
 
     def update_parameter(self, **kwargs):
@@ -25,8 +26,20 @@ class ScheduledTask:
 
     async def run_task(self):
         """
-        Originally planned to use Memory channel, but just storing results on self is sound.
-        Will not check return data.
+        Tries to run task asynchronously, returns result or err if any happened.
+        Schedule execution of self for continuous execution.
+        :return:
+        """
+        try:
+            return await self._task()
+        except Exception as err:
+            return err
+        finally:
+            await self._task_send_channel.send(self)
+
+    async def _task(self) -> Any:
+        """
+        Fill out your own actions here. Not yet decided what to do with return value.
         """
         raise NotImplementedError
 
