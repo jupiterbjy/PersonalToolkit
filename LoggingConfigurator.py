@@ -26,7 +26,8 @@ def log_caller():
 class CallerLoggedLogger:
     """
     Proxy object for logger.
-    Provides same interface to original logger, and attributes are added or decorated in lazy manner.
+    Provides same interface to original logger.
+    Attributes are added and decorated in lazy manner.
 
     # format:
          <caller> msg

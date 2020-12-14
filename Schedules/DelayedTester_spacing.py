@@ -7,8 +7,8 @@ from . import ScheduledTask
 class TaskObject(ScheduledTask):
     def __init__(self):
         super().__init__()
-        self.name = "Delay Tester"
-        self._msgs = deque(' nyarukoishi~')
+        self.name = "Spacer"
+        self._msgs = deque(' JUST FOR SPACING ')
         self.delay = 0.5
 
     async def _task(self) -> Any:

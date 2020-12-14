@@ -49,10 +49,8 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
         self.rect = None
         self.executed = 0
         self.bg_color = (0.5, 0.5, 0.5, 1)
-        self.size_hint
 
-
-        super().__init__(**kwargs)
+        super().__init__(size_hint=(0.3, 0.3), **kwargs)
 
     def __str__(self):
         return f"<{self.__class__.__name__} Object based on {self.task_object.__module__}>"

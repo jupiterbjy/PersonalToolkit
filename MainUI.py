@@ -109,14 +109,13 @@ class MainUIApp(App):
                 print("App Stop")
                 nursery.cancel_scope.cancel()
 
-            logger.debug("Starting task receiver")
             self.nursery.start_soon(self.wait_for_tasks, nursery)
             logger.debug("Starting UI")
             self.nursery.start_soon(run_wrapper)
 
     async def wait_for_tasks(self, nursery: trio.Nursery):
         async def scheduler():
-            logger.debug("In scheduler")
+            logger.debug("Now accepting tasks.")
 
             async with trio.open_nursery() as nursery_sub:
                 async for task_coroutine in self.recv_ch:
@@ -136,7 +135,7 @@ class MainUIApp(App):
             except trio.WouldBlock:
                 pass
 
-            logger.debug(f"Cancel scope closed, waiting to start.")
+            logger.debug(f"Cancel scope closed, waiting for start event.")
             await self.event.wait()
 
 

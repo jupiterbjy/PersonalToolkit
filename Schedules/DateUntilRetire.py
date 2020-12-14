@@ -2,7 +2,6 @@ import datetime
 from typing import Any
 
 from . import ScheduledTask
-from LoggingConfigurator import logger
 
 """
 Calculates how many days / much percent point is left until end of
@@ -25,8 +24,6 @@ class TaskObject(ScheduledTask):
         self._storage = dict()
 
     async def _task(self) -> Any:
-        logger.debug("Task executed!")
-
         today = datetime.datetime.now()
 
         try:
@@ -42,7 +39,6 @@ class TaskObject(ScheduledTask):
                 self.parameters["Format"]
             )
             self._storage["total_dur"] = (end - start).total_seconds()
-            logger.debug(f"storing value: {self._storage['total_dur']}")
 
             self._storage["start_date"], self._storage["end_date"] = start, end
             

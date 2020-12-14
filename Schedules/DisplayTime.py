@@ -15,5 +15,4 @@ class TaskObject(ScheduledTask):
         self.name = "time.time()"
 
     async def _task(self) -> Any:
-        logger.debug("Running run_task")
         return f"{time.time():.6f}"
