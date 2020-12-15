@@ -38,5 +38,5 @@ class ScheduledTask:
         """
         Fill out your own actions here. Not yet decided what to do with return value.
         """
-        raise NotImplementedError
+        return None
 

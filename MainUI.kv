@@ -20,11 +20,13 @@
 			text: 'reload'
 			on_release: root.on_reload_release()
 	
-	GridLayout:
-		size_hint: 1, 0.9
-		spacing: 10
-		id: grid_main
-		cols: 3
+	ScrollView:
+		
+		GridLayout:
+			size_hint: 1, 0.9
+			spacing: 15
+			id: grid_main
+			cols: 3
 		
 
 <InnerWidget>:

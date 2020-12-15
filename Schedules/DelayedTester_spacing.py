@@ -9,7 +9,7 @@ class TaskObject(ScheduledTask):
         super().__init__()
         self.name = "Spacer"
         self._msgs = deque(' JUST FOR SPACING ')
-        self.delay = 0.5
+        self.delay = 0.3
 
     async def _task(self) -> Any:
         await trio.sleep(self.delay)
