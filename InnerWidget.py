@@ -5,6 +5,7 @@ from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.graphics import Color, Rectangle, Canvas
 from kivy.uix.label import Label
+from kivy.core.window import Window
 
 from Schedules import ScheduledTask
 from LoggingConfigurator import logger
@@ -51,6 +52,7 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
         self.bg_color = (0.5, 0.5, 0.5, 1)
 
         super().__init__(**kwargs)
+
         self.size_hint_max = 300, 300
 
     def __str__(self):
@@ -79,3 +81,4 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
     def on_press(self):
         print(f"Press event on {self.name}")
         # self.task_send_ch.send_nowait(self.submit_task)
+

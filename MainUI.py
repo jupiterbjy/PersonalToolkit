@@ -8,6 +8,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.properties import ObjectProperty, StringProperty
+from kivy.core.window import Window
 
 from InnerWidget import InnerWidget
 import Loader
@@ -36,12 +37,27 @@ class MainUI(BoxLayout):
         self.task_start: Callable = fn_accept_tasks
         self.task_stop: Callable = fn_stop_task
 
+        self.multiplier = 0.3, 0.3
+        self.listing_layout.size_hint_max = [mul_ * axis for mul_, axis in zip(self.multiplier, self.get_screen_size())]
+
     def on_start_release(self):
         logger.debug("Press Event on Start")
         if self.start_stop_wid.state == 'down':
             self.start_action()
         else:
             self.stop_action()
+
+    def resize_grid(self, widget_count):
+        # Temporary implementation, will fix
+
+        rel_x, rel_y = self.multiplier
+        x, y = self.get_screen_size()
+        spacing = 10
+
+        x_max = x // widget_count
+        y_max = y // widget_count
+
+        # pass this to InnerWidget
 
     def on_reload_release(self):
         """
@@ -76,6 +92,9 @@ class MainUI(BoxLayout):
         self.start_stop_wid.text = 'start'
         self.task_stop()
 
+    @staticmethod
+    def get_screen_size():
+        return Window.size
 
 class MainUIApp(App):
 
