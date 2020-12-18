@@ -38,7 +38,7 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
     executed_count = StringProperty()
     output = StringProperty()
 
-    def __init__(self, task_object: ScheduledTask, mem_send: trio.MemorySendChannel, **kwargs):
+    def __init__(self, task_object: ScheduledTask, mem_send: trio.MemorySendChannel, size_hint, **kwargs):
         self.task_send_ch = mem_send
         self.orientation = 'vertical'
 
@@ -53,7 +53,7 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
 
         super().__init__(**kwargs)
 
-        self.size_hint_max = 300, 300
+        self.size_hint = size_hint
 
     def __str__(self):
         return f"<{self.__class__.__name__} Object based on {self.task_object.__module__}>"

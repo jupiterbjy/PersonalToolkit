@@ -1,12 +1,10 @@
 import trio
+import math
 
 # Kivy imports
 from kivy.app import App
-from kivy.lang.builder import Builder
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.button import Button
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.core.window import Window
 
@@ -15,7 +13,6 @@ import Loader
 
 # Typing
 from typing import List, Callable
-from Schedules import ScheduledTask
 
 # Temporary
 from LoggingConfigurator import logger
@@ -28,36 +25,20 @@ class MainUI(BoxLayout):
 
     def __init__(self, send_channel, fn_accept_tasks, fn_stop_task, **kwargs):
         super().__init__(**kwargs)
-        self.orientation = 'vertical'
+        self.orientation = "vertical"
 
         self.send_ch = send_channel
-        self.widget_load_list = [str(n) for n in range(4)]
         self.loaded_widget_reference: List[InnerWidget] = []
 
         self.task_start: Callable = fn_accept_tasks
         self.task_stop: Callable = fn_stop_task
 
-        self.multiplier = 0.3, 0.3
-        self.listing_layout.size_hint_max = [mul_ * axis for mul_, axis in zip(self.multiplier, self.get_screen_size())]
-
-    def on_start_release(self):
+    def on_toggle_release(self):
         logger.debug("Press Event on Start")
-        if self.start_stop_wid.state == 'down':
+        if self.start_stop_wid.state == "down":
             self.start_action()
         else:
             self.stop_action()
-
-    def resize_grid(self, widget_count):
-        # Temporary implementation, will fix
-
-        rel_x, rel_y = self.multiplier
-        x, y = self.get_screen_size()
-        spacing = 10
-
-        x_max = x // widget_count
-        y_max = y // widget_count
-
-        # pass this to InnerWidget
 
     def on_reload_release(self):
         """
@@ -71,15 +52,21 @@ class MainUI(BoxLayout):
         self.loaded_widget_reference.clear()  # Then drop reference!
 
         for task_object in Loader.fetch_scripts():
-            self.loaded_widget_reference.append(InnerWidget(task_object, self.send_ch))
+            self.loaded_widget_reference.append(
+                InnerWidget(
+                    task_object, self.send_ch, self._get_subwidget_size_target()
+                )
+            )
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
-            logger.debug(f"Last added: {self.loaded_widget_reference[-1]}")
+            logger.info(f"Last added: {self.loaded_widget_reference[-1]}")
+
+        # self.resize_accordingly()
 
     def start_action(self):
         """
         Start scheduling execution of Task objects.
         """
-        self.start_stop_wid.text = 'stop'
+        self.start_stop_wid.text = "stop"
         self.task_start()
         for widget in self.loaded_widget_reference:
             logger.debug(f"Starting task {widget}")
@@ -89,22 +76,52 @@ class MainUI(BoxLayout):
         """
         Cancel the trio.CancelScope, stopping re-scheduling and execution of Task objects.
         """
-        self.start_stop_wid.text = 'start'
+        self.start_stop_wid.text = "start"
         self.task_stop()
 
-    @staticmethod
-    def get_screen_size():
-        return Window.size
+    def _get_subwidget_size_target(self) -> (int, int):
+        """
+        Calculate subwidget size.
+        :return: (int, int)
+        """
+        widget_per_row = self.listing_layout.cols
+        spacing_x, spacing_y = self.listing_layout.spacing
+
+        win_x, win_y = Window.size
+
+        size_x = (win_x - spacing_x * 2) // widget_per_row
+        size_y = (win_x - spacing_y * 2) // widget_per_row
+        logger.debug((size_x, size_y))
+        return size_x, size_y
+
+    def resize_accordingly(self):
+        """
+        Check how many widgets are loaded and resize Grid Size accordingly.
+        """
+        widget_per_row = self.listing_layout.cols
+        spacing_x, spacing_y = self.listing_layout.spacing
+
+        count = len(self.loaded_widget_reference)
+        rows = math.ceil(count / widget_per_row)
+        cols = count if count < widget_per_row else widget_per_row
+
+        wid_x, wid_y = self._get_subwidget_size_target()
+
+        new_win_x = (wid_x + spacing_x) * cols - spacing_x
+        new_win_y = (wid_y + spacing_y) * rows - spacing_y
+
+        logger.debug((new_win_x, new_win_y))
+
+        self.listing_layout.size_hint_max_x = new_win_x
+
 
 class MainUIApp(App):
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.send_ch, self.recv_ch = trio.open_memory_channel(500)
 
-        self.nursery: trio.Nursery = None
-        self.cancel_scope: trio.CancelScope = None
-        self.event: trio.Event = None
+        self.cancel_scope: trio.CancelScope = trio.CancelScope()  # Pointless init for hinting.
+        self.event: trio.Event = trio.Event()
 
     def build(self):
         return MainUI(self.send_ch, self.start_tasks, self.cancel_tasks)
@@ -120,19 +137,18 @@ class MainUIApp(App):
         """Trio wrapper async function."""
 
         async with trio.open_nursery() as nursery:
-            self.nursery = nursery
 
             async def run_wrapper():
                 # Set trio
-                await self.async_run(async_lib='trio')
-                print("App Stop")
+                await self.async_run(async_lib="trio")
+                logger.info("App Stop")
                 nursery.cancel_scope.cancel()
 
-            self.nursery.start_soon(self.wait_for_tasks, nursery)
-            logger.debug("Starting UI")
-            self.nursery.start_soon(run_wrapper)
+            nursery.start_soon(self.wait_for_tasks)
+            logger.info("Starting UI")
+            nursery.start_soon(run_wrapper)
 
-    async def wait_for_tasks(self, nursery: trio.Nursery):
+    async def wait_for_tasks(self):
         async def scheduler():
             logger.debug("Now accepting tasks.")
 
@@ -143,11 +159,10 @@ class MainUIApp(App):
                     logger.debug(f"Scheduled execution of task <{task_coroutine}>")
 
         while True:
-            logger.debug(f"Now accepting tasks.")
-            self.event = trio.Event()
             with trio.CancelScope() as cancel_scope:
                 self.cancel_scope = cancel_scope
                 await scheduler()
+
             try:
                 while leftover := self.recv_ch.receive_nowait():
                     logger.debug(f"Dumping {leftover}")
@@ -156,8 +171,8 @@ class MainUIApp(App):
 
             logger.debug(f"Cancel scope closed, waiting for start event.")
             await self.event.wait()
+            self.event = trio.Event()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     trio.run(MainUIApp().app_func)
-

@@ -58,4 +58,4 @@ def mock_patch(num):
     setattr(self_, fetch_scripts.__name__, func)
 
 
-mock_patch(7)
+mock_patch(30)

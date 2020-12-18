@@ -12,7 +12,7 @@
 			id: btn_start_stop
 			group: 'controls'
 			text: 'start'
-			on_release: root.on_start_release()
+			on_release: root.on_toggle_release()
 			
 		ToggleButton:
 			id: btn_reload
@@ -23,9 +23,10 @@
 	ScrollView:
 		
 		GridLayout:
-			size_hint: 1, 0.9
-			spacing: 15
 			id: grid_main
+			size_hint_y: None
+			height: self.minimum_height
+			spacing: 15, 15
 			cols: 3
 		
 
@@ -41,14 +42,17 @@
 	label_mid: inner_label_mid
 	label_bottom: inner_label_bottom
 	
-	Label:
-		id: inner_label_top
-		text: root.name
-		
-	Label:
-		id: inner_label_mid
-		text: root.output
-		
-	Label:
-		id: inner_label_bottom
-		text: root.executed_count
+	BoxLayout:
+		size_hint: 0.3, 0.3
+	
+		Label:
+			id: inner_label_top
+			text: root.name
+			
+		Label:
+			id: inner_label_mid
+			text: root.output
+			
+		Label:
+			id: inner_label_bottom
+			text: root.executed_count
