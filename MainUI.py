@@ -60,7 +60,7 @@ class MainUI(BoxLayout):
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
             logger.info(f"Last added: {self.loaded_widget_reference[-1]}")
 
-        # self.resize_accordingly()
+        self.resize_accordingly()
 
     def start_action(self):
         """
@@ -112,7 +112,9 @@ class MainUI(BoxLayout):
 
         logger.debug((new_win_x, new_win_y))
 
-        self.listing_layout.size_hint_max_x = new_win_x
+        # self.listing_layout.size_hint_max_x = new_win_x
+        self.listing_layout.size_hint_min = new_win_x, new_win_y
+        self.listing_layout.size_hint_max = new_win_x, new_win_y
 
 
 class MainUIApp(App):

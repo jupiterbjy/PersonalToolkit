@@ -53,7 +53,7 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
 
         super().__init__(**kwargs)
 
-        self.size_hint = size_hint
+        # self.size_hint = size_hint
 
     def __str__(self):
         return f"<{self.__class__.__name__} Object based on {self.task_object.__module__}>"
@@ -79,6 +79,6 @@ class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):
         self.task_send_ch.send_nowait(self.update_output)
 
     def on_press(self):
-        print(f"Press event on {self.name}")
+        logger.debug(f"Press event on {self}")
         # self.task_send_ch.send_nowait(self.submit_task)
 

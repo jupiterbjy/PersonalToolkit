@@ -24,7 +24,7 @@
 		
 		GridLayout:
 			id: grid_main
-			size_hint_y: None
+			
 			height: self.minimum_height
 			spacing: 15, 15
 			cols: 3
@@ -41,18 +41,15 @@
 	label_top: inner_label_top
 	label_mid: inner_label_mid
 	label_bottom: inner_label_bottom
-	
-	BoxLayout:
-		size_hint: 0.3, 0.3
-	
-		Label:
-			id: inner_label_top
-			text: root.name
-			
-		Label:
-			id: inner_label_mid
-			text: root.output
-			
-		Label:
-			id: inner_label_bottom
-			text: root.executed_count
+
+	Label:
+		id: inner_label_top
+		text: root.name
+		
+	Label:
+		id: inner_label_mid
+		text: root.output
+		
+	Label:
+		id: inner_label_bottom
+		text: root.executed_count
