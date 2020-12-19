@@ -1,6 +1,6 @@
 from os.path import abspath, dirname
 from os import listdir
-from typing import List
+from typing import List, Union
 import importlib
 
 from LoggingConfigurator import logger
@@ -11,14 +11,37 @@ LOCATION = abspath(dirname(abspath(__file__)) + "/" + TASK_LOCATION)
 OBJECT_NAME = "TaskObject"
 
 
-def _load_task_objects(file_name, object_name):
-    module = importlib.import_module(f"{TASK_LOCATION}.{file_name}")
+def _load_task_objects(file_name, object_name) -> Union[ScheduledTask, None]:
+    """
+    With file_name and object_name, load object_name from file_name module and return instance of it.
+    If error was raised while importing script, then will return None instead.
+
+    :param file_name: Name of Task Scripts
+    :param object_name: env_var for Object name in Task Scripts.
+    :return: ScheduledTask or None if error raised.
+    """
+    try:
+        module = importlib.import_module(f"{TASK_LOCATION}.{file_name}")
+    except SyntaxError as err:
+        logger.critical(err)
+        return
+    except Exception as err:
+        logger.critical(err)
+        return
+
     importlib.reload(module)
 
     return getattr(module, object_name)()
 
 
 def fetch_scripts() -> List[ScheduledTask]:
+    """
+    Dynamically search and load all scripts in TASK_LOCATION.
+
+    WARNING: THIS WILL NOT RELOAD __init__.py! This is limitation of importlib.
+
+    :return: List[ScheduledTask]
+    """
     logger.debug(f"Loader looking for scripts inside {LOCATION}")
 
     sources = [f.removesuffix(".py") for f in listdir(LOCATION) if f.endswith(".py")]
@@ -27,8 +50,8 @@ def fetch_scripts() -> List[ScheduledTask]:
     logger.debug(f"Fetched {len(sources)}.")
 
     importlib.invalidate_caches()
-    task_objects = [_load_task_objects(fn, OBJECT_NAME) for fn in sources]
-    return task_objects
+    task_objects = (_load_task_objects(fn, OBJECT_NAME) for fn in sources)
+    return [task_object for task_object in task_objects if task_object is not None]  # Filter None
 
 
 def mock_widget_numbers_patch(target_task, num) -> List[ScheduledTask]:
@@ -46,16 +69,39 @@ def mock_widget_numbers_patch(target_task, num) -> List[ScheduledTask]:
     return [target_task() for _ in range(num)]
 
 
-def mock_patch(num):
+def mock_patch(num, target=None):
+    """
+    Fetch one scripts and repeats *num* times.
+
+    :param num: number of widgets to create
+    :param target: name of script to load. if not specified, will use first script loaded.
+    """
     from sys import modules
     from functools import partial
 
-    target = fetch_scripts()[0].__class__
-    func = partial(mock_widget_numbers_patch, target, num)
+    script_list = fetch_scripts()
+
+    if not target or target not in (cls.__module__.split(".")[-1] for cls in script_list):
+        # Checking Module name - aka file name without directory name.
+
+        logger.warning(f"Target is None or not found in script_list."
+                       f"Make sure Target is set to script's file name.")
+
+        repeat_target = script_list[0]
+    else:
+        for script in script_list:
+            if script.__module__.split(".")[-1] == target:
+                repeat_target = script
+                break
+        else:
+            logger.warn(f"Target {target} is not found while loading. Possibly a bug?")
+            repeat_target = script_list[0]
+
+    func = partial(mock_widget_numbers_patch, repeat_target.__class__, num)
 
     self_ = modules.get(__name__)
     logger.debug(f"Mock patched {fetch_scripts.__name__}.")
     setattr(self_, fetch_scripts.__name__, func)
 
 
-mock_patch(30)
+mock_patch(30, "DelayedTester_spacing")
