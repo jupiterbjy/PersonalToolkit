@@ -1,6 +1,8 @@
 # Dynamic Task Viewer
 Repository to learn *kivy* + *trio*. Targeting to provide addition of python routines to android.
 
+This contains additional one-time use personal scripts, will create separate repository if this grows bigger.
+
 ---
 ## Goal
 Simply Executing multiple scripts with the concurrency achieved with use of *trio*,
