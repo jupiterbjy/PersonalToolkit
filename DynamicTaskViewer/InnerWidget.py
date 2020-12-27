@@ -1,32 +1,11 @@
 import trio
-from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty, StringProperty, NumericProperty
+from kivy.properties import ObjectProperty, StringProperty
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.graphics import Color, Rectangle, Canvas
-from kivy.uix.label import Label
-from kivy.core.window import Window
 
+from KivyCustomModule import BackgroundManagerMixin
 from Schedules import ScheduledTask
 from LoggingConfigurator import logger
-
-from typing import Iterable
-
-
-class BackgroundManagerMixin:
-    def update_bg(self, color: Iterable):
-        self: BoxLayout
-
-        self.canvas.before.clear()  # Is .before also canvas? I don't see method clear there.
-        with self.canvas.before:
-            Color(*color)
-            self.rect = Rectangle(pos=self.pos, size=self.size)
-
-        self.bind(pos=self.update_rect, size=self.update_rect)
-
-    def update_rect(self, *args):
-        self.rect.pos = self.pos
-        self.rect.size = self.size
 
 
 class InnerWidget(ButtonBehavior, BoxLayout, BackgroundManagerMixin):

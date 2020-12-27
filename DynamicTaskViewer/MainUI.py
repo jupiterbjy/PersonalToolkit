@@ -8,23 +8,23 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.core.window import Window
 
+from LoggingConfigurator import logger
+from KivyCustomModule import BackgroundManagerMixin
 from InnerWidget import InnerWidget
 import Loader
 
 # Typing
 from typing import List, Callable
 
-# Temporary
-from LoggingConfigurator import logger
 
-
-class MainUI(BoxLayout):
+class MainUI(BoxLayout, BackgroundManagerMixin):
     start_stop_wid = ObjectProperty()
     listing_layout: GridLayout = ObjectProperty()
     current_text = StringProperty()
 
     def __init__(self, send_channel, fn_accept_tasks, fn_stop_task, **kwargs):
-        super().__init__(**kwargs)
+        self.bg_color = (0.3, 0.3, 0.3, 1)
+
         self.orientation = "vertical"
 
         self.send_ch = send_channel
@@ -32,6 +32,10 @@ class MainUI(BoxLayout):
 
         self.task_start: Callable = fn_accept_tasks
         self.task_stop: Callable = fn_stop_task
+
+        super().__init__(**kwargs)
+
+        self.update_bg(self.bg_color)
 
     def on_toggle_release(self):
         logger.debug("Press Event on Start")
@@ -79,6 +83,10 @@ class MainUI(BoxLayout):
         self.start_stop_wid.text = "start"
         self.task_stop()
 
+    def callback(self):
+        logger.debug(f"in callback")
+        self.resize_accordingly()
+
     def _get_subwidget_size_target(self) -> (int, int):
         """
         Calculate subwidget size.
@@ -111,6 +119,8 @@ class MainUI(BoxLayout):
         new_win_y = (wid_y + spacing_y) * rows - spacing_y
 
         logger.debug((new_win_x, new_win_y))
+        if new_win_x < 1 or new_win_y < 1:
+            logger.warning("Negative value for size!")
 
         # self.listing_layout.size_hint_max_x = new_win_x
         self.listing_layout.size_hint_min = new_win_x, new_win_y

@@ -1,8 +1,6 @@
 import time
 from typing import Any
 from . import ScheduledTask
-from LoggingConfigurator import logger
-
 
 """
 Minimal task for testing purpose.

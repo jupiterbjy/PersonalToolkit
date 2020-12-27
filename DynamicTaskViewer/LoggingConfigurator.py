@@ -3,12 +3,13 @@ import inspect
 from functools import wraps
 
 
-_handler = logging.StreamHandler()
-_handler.setLevel("DEBUG")
-_handler.setFormatter(logging.Formatter("[--%(levelname)s--] %(message)s"))
 LOGGER = logging.getLogger("UI_DEBUG")
-LOGGER.addHandler(_handler)
-LOGGER.setLevel("DEBUG")
+if not LOGGER.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setLevel("DEBUG")
+    _handler.setFormatter(logging.Formatter("[--%(levelname)s--] %(message)s"))
+    LOGGER.addHandler(_handler)
+    LOGGER.setLevel("DEBUG")
 
 
 def get_caller_stack_name(depth=1):
@@ -28,7 +29,6 @@ class CallerLoggedLogger:
     Proxy object for logger.
     Provides same interface to original logger.
     Attributes are added and decorated in lazy manner.
-
     # format:
          <caller> msg
     """
@@ -63,26 +63,18 @@ if __name__ == '__main__':
     def test():
         """
         >>> a = CallerLoggedLogger()
-
         >>> a.debug('this is debug')  # prints on stderr, so no output to stdout.
-
         >>> a.warning('this is warning')  # and so on.
-
         >>> "debug" in dir(a)
         True
-
         >>> "warning" in dir(a)
         True
-
         >>> "critical" in dir(a)
         False
-
         >>> def tester():
         ...     a.warning("<-- this guy called me!")
         ...
-
         >>> tester()  # testing if warning is called out properly.
-
         """
 
     import doctest

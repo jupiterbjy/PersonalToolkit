@@ -1,6 +1,6 @@
 from typing import Any
 from trio import MemorySendChannel
-from LoggingConfigurator import logger
+from DynamicTaskViewer.LoggingConfigurator import logger
 
 
 class ScheduledTask:

@@ -14,13 +14,19 @@
 			text: 'start'
 			on_release: root.on_toggle_release()
 			
-		ToggleButton:
+		Button:
 			id: btn_reload
 			group: 'controls'
 			text: 'reload'
 			on_release: root.on_reload_release()
 	
 	ScrollView:
+		canvas.before:
+			Color:
+				rgba: root.bg_color
+			Rectangle:
+				size: self.size
+				pos: self.pos
 		
 		GridLayout:
 			id: grid_main
