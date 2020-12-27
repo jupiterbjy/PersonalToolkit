@@ -3,8 +3,9 @@ import itertools
 from textwrap import shorten
 
 
-root = "SOFTWARE"
-hKey = winreg.OpenKey(winreg.HKEY_CURRENT_USER, root)
+root = ""
+target_root = winreg.HKEY_LOCAL_MACHINE
+h_key_main = winreg.OpenKey(target_root, root)
 AUTO_FIX = False
 
 
@@ -19,7 +20,6 @@ def get_keyword():
 def iterkeys(key, root_path=root):
     """
     Recursively iterates thru keys, revealing all keys.
-    If replace is not None, i.e. '' will convert targets to blank. leaving it default will not.
     returns absolute path relative to root, and EnumValue result.
     """
 
@@ -46,7 +46,7 @@ def fetch_list(search_target):
     counter = 1
     convert_list = []
 
-    for idx, (path_, (name, val, type_)) in enumerate(iterkeys(hKey)):
+    for idx, (path_, (name, val, type_)) in enumerate(iterkeys(h_key_main)):
         if search_target in name or search_target in str(val):
             try:
                 val_short = val[:50]
@@ -107,9 +107,14 @@ def main():
     fetch_reg_types = fetch_reg_type_table()
 
     for idx, (path_, name, val) in enumerate(fetched, 1):
-        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, path_, 0, winreg.KEY_ALL_ACCESS) as h_key:
+        with winreg.OpenKey(target_root, path_, 0, winreg.KEY_ALL_ACCESS) as h_key:
 
             value, type_ = winreg.QueryValueEx(h_key, name)
+
+            print(f"\n{idx} / {len(fetched)}\n"
+                  f"Path: {path_}\n"
+                  f"Type: {fetch_reg_types[type_]}\n"
+                  f"From: {val}")
 
             try:
                 converted = value.replace(keyword, keyword_conv)
@@ -118,10 +123,7 @@ def main():
                 print(f"Passing {name}, {val}")
                 continue
 
-            print(f"{idx} / {len(fetched)}\n"
-                  f"From: {val}\n"
-                  f"To  : {converted}\n"
-                  f"Type: {fetch_reg_types[type_]}\n")
+            print(f"To  : {converted}\n")
 
             if not AUTO_FIX:
                 input(f"Press enter to convert this key, or press Ctrl+C to stop.")
