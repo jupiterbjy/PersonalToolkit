@@ -3,7 +3,7 @@ import itertools
 from textwrap import shorten
 
 
-root = ""
+root = "SOFTWARE"
 target_root = winreg.HKEY_LOCAL_MACHINE
 h_key_main = winreg.OpenKey(target_root, root)
 AUTO_FIX = False
@@ -93,6 +93,38 @@ def fetch_reg_type_table():
     return table
 
 
+def convert_interactively(old_str, new_str, conversion_list, registry_table):
+    for idx, (path_, name, val) in enumerate(conversion_list, 1):
+        try:
+            context = winreg.OpenKey(target_root, path_, 0, winreg.KEY_ALL_ACCESS)
+        except PermissionError:
+            print(f"Permission error on {path_}, {name}!")
+            continue
+
+        with context as h_key:
+
+            value, type_ = winreg.QueryValueEx(h_key, name)
+
+            print(f"\n{idx} / {len(conversion_list)}\n"
+                  f"Path: {path_}\n"
+                  f"Type: {registry_table[type_]}\n"
+                  f"From: {val}")
+
+            try:
+                converted = value.replace(old_str, new_str)
+            except (AttributeError, TypeError) as err:
+                print(err)
+                print(f"Passing {name}, {val}")
+                continue
+
+            print(f"To  : {converted}\n")
+
+            if not AUTO_FIX:
+                input(f"Press enter to convert this key, or press Ctrl+C to stop.")
+
+            winreg.SetValueEx(h_key, name, 0, type_, value.replace(old_str, new_str))
+
+
 def main():
     # \\keyword\\ is expected for directory search
     print("\nIf you are trying to convert directory, then it's recommended to add reverse slash around them.\n")
@@ -106,29 +138,7 @@ def main():
 
     fetch_reg_types = fetch_reg_type_table()
 
-    for idx, (path_, name, val) in enumerate(fetched, 1):
-        with winreg.OpenKey(target_root, path_, 0, winreg.KEY_ALL_ACCESS) as h_key:
-
-            value, type_ = winreg.QueryValueEx(h_key, name)
-
-            print(f"\n{idx} / {len(fetched)}\n"
-                  f"Path: {path_}\n"
-                  f"Type: {fetch_reg_types[type_]}\n"
-                  f"From: {val}")
-
-            try:
-                converted = value.replace(keyword, keyword_conv)
-            except (AttributeError, TypeError) as err:
-                print(err)
-                print(f"Passing {name}, {val}")
-                continue
-
-            print(f"To  : {converted}\n")
-
-            if not AUTO_FIX:
-                input(f"Press enter to convert this key, or press Ctrl+C to stop.")
-
-            winreg.SetValueEx(h_key, name, 0, type_, value.replace(keyword, keyword_conv))
+    convert_interactively(keyword, keyword_conv, fetched, fetch_reg_types)
 
 
 if __name__ == '__main__':
