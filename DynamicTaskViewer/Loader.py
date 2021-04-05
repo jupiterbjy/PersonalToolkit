@@ -1,18 +1,19 @@
-from os.path import abspath, dirname
-from os import listdir
-from typing import List, Union, Iterable
-from itertools import zip_longest, cycle
+import logging
+import pathlib
 import importlib
+from itertools import cycle
+from typing import List, Union, Iterable, Type, Tuple
 
-from LoggingConfigurator import logger
 from Schedules import ScheduledTask
 
+
+logger = logging.getLogger("debug")
 TASK_LOCATION = "Schedules"
-LOCATION = abspath(dirname(abspath(__file__)) + "/" + TASK_LOCATION)
+LOCATION = pathlib.Path("./").joinpath(TASK_LOCATION)
 OBJECT_NAME = "TaskObject"
 
 
-def _load_task_objects(file_name, object_name) -> Union[ScheduledTask, None]:
+def load_tasks(file_name, object_name) -> Union[Type[ScheduledTask], None]:
     """
     With file_name and object_name, load object_name from file_name module and return instance of it.
     If error was raised while importing script, then will return None instead.
@@ -22,37 +23,37 @@ def _load_task_objects(file_name, object_name) -> Union[ScheduledTask, None]:
     :return: ScheduledTask or None if error raised.
     """
     try:
-        module = importlib.import_module(f"{TASK_LOCATION}.{file_name}")
-    except SyntaxError as err:
-        logger.critical(err)
-        return
-    except Exception as err:
+        module = importlib.import_module(file_name.replace("/", "."))
+
+    except (SyntaxError, ModuleNotFoundError) as err:
         logger.critical(err)
         return
 
     importlib.reload(module)
 
-    return getattr(module, object_name)()
+    return getattr(module, object_name)
 
 
-def fetch_scripts() -> List[ScheduledTask]:
+def fetch_scripts() -> Tuple[Type[ScheduledTask]]:
     """
     Dynamically search and load all scripts in TASK_LOCATION.
 
-    WARNING: THIS WILL NOT RELOAD __init__.py! This is limitation of importlib.
+    THIS WILL NOT RELOAD __init__.py! This is limitation of importlib.
 
     :return: List[ScheduledTask]
     """
-    logger.debug(f"Loader looking for scripts inside {LOCATION}")
+    logger.debug(f"Loader looking for scripts inside {LOCATION.as_posix()}")
 
-    sources = [f.removesuffix(".py") for f in listdir(LOCATION) if f.endswith(".py")]
-    sources.remove("__init__")
+    iterator = (path_.as_posix() for path_ in LOCATION.iterdir())
+    sources = [f.removesuffix(".py") for f in iterator if f.endswith(".py")]
+    sources.remove(LOCATION.joinpath("__init__").as_posix())
 
-    logger.debug(f"Fetched {len(sources)}.")
+    logger.debug(f"Fetched {len(sources)}")
 
     importlib.invalidate_caches()
-    task_objects = (_load_task_objects(fn, OBJECT_NAME) for fn in sources)
-    return [task_object for task_object in task_objects if task_object is not None]  # Filter None
+
+    tasks = (load_tasks(fn, OBJECT_NAME) for fn in sources)
+    return tuple(task_cls for task_cls in tasks if task_cls is not None)
 
 
 def mock_widget_numbers_patch(target_tasks: Iterable, num) -> List[ScheduledTask]:
@@ -98,7 +99,7 @@ def mock_patch(num, target=None):
                 repeat_target = [script]
                 break
         else:
-            logger.warn(f"Target {target} is not found while loading. Possibly a bug?")
+            logger.warning(f"Target {target} is not found while loading. Possibly a bug?")
             repeat_target = [script_list[0]]
 
     func = partial(mock_widget_numbers_patch, [target.__class__ for target in repeat_target], num)
@@ -108,4 +109,4 @@ def mock_patch(num, target=None):
     setattr(self_, fetch_scripts.__name__, func)
 
 
-mock_patch(30)
+# mock_patch(30)

@@ -1,12 +1,41 @@
 import winreg
 import itertools
+from sys import argv
 from textwrap import shorten
 
+tip = r"""
+Simple Script originally designed to change Registry paths recursively.
+Recommended to add directory separators on str so it won't catch non-path registries.
+There is no type checking, proceed with extreme caution.
 
-root = "SOFTWARE"
-target_root = winreg.HKEY_LOCAL_MACHINE
-h_key_main = winreg.OpenKey(target_root, root)
-AUTO_FIX = False
+Usage:
+    RegistryUpdateUser <HKEY> <FOLDER> <FIND_STR> <REPLACE_STR>
+
+Example usage:
+    RegistryUpdateUser HKEY_LOCAL_MACHINE SOFTWARE \abc\ \ABC\
+"""
+
+
+def assert_fast():
+    # check length first by unpacking
+    try:
+        _, hkey_name, folder_, find_str, repl_str = argv
+    except ValueError as err:
+        raise AssertionError("Not enough param") from err
+
+    # Check if HKEY exists, don't cover all possible cases!
+    try:
+        hkey = getattr(winreg, hkey_name)
+    except AttributeError as err:
+        raise AssertionError("No such HKEY named", hkey_name)
+
+    # Check if folder exists
+    try:
+        hkey_root = winreg.OpenKey(hkey, folder_)
+    except FileNotFoundError as err:
+        raise AssertionError("No such folder or file named", folder_)
+
+    return hkey_root, folder_, find_str, repl_str
 
 
 def get_keyword():
@@ -17,7 +46,7 @@ def get_keyword():
     return get_keyword()
 
 
-def iterkeys(key, root_path=root):
+def iterkeys(key, root_path):
     """
     Recursively iterates thru keys, revealing all keys.
     returns absolute path relative to root, and EnumValue result.
@@ -35,19 +64,19 @@ def iterkeys(key, root_path=root):
             # else it's likely to be a folder. recursively opens it.
             try:
                 yield from iterkeys(winreg.OpenKey(key, out), f"{root_path}\\{out}")
-            except OSError as err_:
+            except OSError as err:
                 return
 
         else:
             yield root_path, out
 
 
-def fetch_list(search_target):
+def fetch_list(hkey_root, root_path, find_str):
     counter = 1
     convert_list = []
 
-    for idx, (path_, (name, val, type_)) in enumerate(iterkeys(h_key_main)):
-        if search_target in name or search_target in str(val):
+    for idx, (path_, (name, val, type_)) in enumerate(iterkeys(hkey_root, root_path)):
+        if find_str in name or find_str in str(val):
             try:
                 val_short = val[:50]
             except TypeError:
@@ -93,12 +122,18 @@ def fetch_reg_type_table():
     return table
 
 
-def convert_interactively(old_str, new_str, conversion_list, registry_table):
+def convert_interactively(hkey_root, old_str, new_str, conversion_list, registry_table):
     for idx, (path_, name, val) in enumerate(conversion_list, 1):
+
+        print(hkey_root, path_)
         try:
-            context = winreg.OpenKey(target_root, path_, 0, winreg.KEY_ALL_ACCESS)
+            context = winreg.OpenKey(hkey_root, path_, 0, winreg.KEY_ALL_ACCESS)
         except PermissionError:
             print(f"Permission error on {path_}, {name}!")
+            continue
+        except FileNotFoundError as err:
+            print(f"Something went wrong!")
+            print(err)
             continue
 
         with context as h_key:
@@ -119,27 +154,26 @@ def convert_interactively(old_str, new_str, conversion_list, registry_table):
 
             print(f"To  : {converted}\n")
 
-            if not AUTO_FIX:
-                input(f"Press enter to convert this key, or press Ctrl+C to stop.")
+            input(f"Press enter to convert this key, or press Ctrl+C to stop.")
 
             winreg.SetValueEx(h_key, name, 0, type_, value.replace(old_str, new_str))
 
 
-def main():
-    # \\keyword\\ is expected for directory search
-    print("\nIf you are trying to convert directory, then it's recommended to add reverse slash around them.\n")
-    keyword = get_keyword()
+def main(hkey_root_key, folder_name, find_str, replace_str):
 
-    fetched = fetch_list(keyword)
+    fetched = fetch_list(hkey_root_key, folder_name, find_str)
     print(f"Fetched {len(fetched)} entries.")
-
-    print(f"\nSpecify keyword to replace {keyword}.\n")
-    keyword_conv = get_keyword()
 
     fetch_reg_types = fetch_reg_type_table()
 
-    convert_interactively(keyword, keyword_conv, fetched, fetch_reg_types)
+    convert_interactively(hkey_root_key, find_str, replace_str, fetched, fetch_reg_types)
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        args = assert_fast()
+    except AssertionError as err_:
+        print(err_)
+        print(tip)
+    else:
+        main(*args)

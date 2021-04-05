@@ -1,5 +1,7 @@
 import trio
 import math
+import logging
+from typing import List, Callable
 
 # Kivy imports
 from kivy.app import App
@@ -8,13 +10,12 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.properties import ObjectProperty, StringProperty
 from kivy.core.window import Window
 
-from LoggingConfigurator import logger
 from KivyCustomModule import BackgroundManagerMixin
 from InnerWidget import InnerWidget
 import Loader
 
-# Typing
-from typing import List, Callable
+
+logger = logging.getLogger("debug")
 
 
 class MainUI(BoxLayout, BackgroundManagerMixin):
@@ -52,17 +53,17 @@ class MainUI(BoxLayout, BackgroundManagerMixin):
         self.stop_action()
 
         logger.debug("Press Event on Reload")
-        self.listing_layout.clear_widgets()  # Drop widget first
-        self.loaded_widget_reference.clear()  # Then drop reference!
 
-        for task_object in Loader.fetch_scripts():
-            self.loaded_widget_reference.append(
-                InnerWidget(
-                    task_object, self.send_ch, self._get_subwidget_size_target()
-                )
-            )
+        # Drop widget first then drop reference.
+        self.listing_layout.clear_widgets()
+        self.loaded_widget_reference.clear()
+
+        for task_class in Loader.fetch_scripts():
+            self.loaded_widget_reference.append(InnerWidget(task_class(), self.send_ch))
+
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
-            logger.info(f"Last added: {self.loaded_widget_reference[-1]}")
+
+            logger.info(f"Added: {self.loaded_widget_reference[-1]}")
 
         self.resize_accordingly()
 
@@ -168,7 +169,7 @@ class MainUIApp(App):
                 async for task_coroutine in self.recv_ch:
 
                     nursery_sub.start_soon(task_coroutine)
-                    logger.debug(f"Scheduled execution of task <{task_coroutine}>")
+                    # logger.debug(f"Scheduled execution of task <{task_coroutine}>")
 
         while True:
             with trio.CancelScope() as cancel_scope:

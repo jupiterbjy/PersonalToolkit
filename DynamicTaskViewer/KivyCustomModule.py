@@ -19,7 +19,7 @@ class BackgroundManagerMixin:
 
         self.bind(pos=self.update_rect, size=self.update_rect)
 
-    def update_rect(self, *args):  # They do pass more parameters.
+    def update_rect(self, *_):  # They do pass more parameters.
         self.rect.pos = self.pos
         self.rect.size = self.size
         self.callback()

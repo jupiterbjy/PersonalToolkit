@@ -1,5 +1,5 @@
 import datetime
-from typing import Any
+import trio
 
 from . import ScheduledTask
 
@@ -8,8 +8,6 @@ Calculates how many days / much percent point is left until end of
 mandatory military service.
 """
 
-
-# TODO: allow each scripts to have respective .kv files.
 
 class TaskObject(ScheduledTask):
 
@@ -23,7 +21,9 @@ class TaskObject(ScheduledTask):
         }
         self._storage = dict()
 
-    async def _task(self) -> Any:
+    async def task(self):
+        await trio.sleep(2)
+
         today = datetime.datetime.now()
 
         try:

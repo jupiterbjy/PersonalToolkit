@@ -1,11 +1,15 @@
-from typing import Any
-from trio import MemorySendChannel
-from DynamicTaskViewer.LoggingConfigurator import logger
+import logging
+import trio
+
+logger = logging.getLogger("debug")
 
 
 class ScheduledTask:
     """
-    Abstract Protocol for task units.
+    Interface for task units.
+
+    # Below description is plan, not implemented
+
     self.parameters dict only receives string inputs,
     it's up to user to convert param as they desire.
     """
@@ -14,9 +18,9 @@ class ScheduledTask:
         """
         Script will check output periodically.
         """
-        self.name = "NoName"
-        self._task_send_channel: MemorySendChannel = None
+        self.name = ""
         self._parameters = dict()
+        self.run = True
 
     def update_parameter(self, **kwargs):
         """
@@ -25,18 +29,27 @@ class ScheduledTask:
         """
         self._parameters.update(kwargs)
 
+    async def task(self):
+        """
+        Fill out your own actions here. Return value will be displayed on widget.
+        """
+
+        return None
+
     async def run_task(self):
         """
-        Tries to run task asynchronously, returns result or err if any happened.
-        Schedule execution of self for continuous execution.
-        :return:
+        Wrapper for task to add default click behavior.
         """
-        logger.debug(f"TaskObject <{self.__module__}> scheduling a task")
-        return await self._task()
 
-    async def _task(self) -> Any:
+        # This way, there will be so many if branches per update!
+        if self.run:
+            return await self.task()
+
+        await trio.sleep(2)
+
+    def on_click(self):
         """
-        Fill out your own actions here. Not yet decided what to do with return value.
+        Action to do when widget is pressed.
         """
-        return None
+        self.run = not self.run
 
