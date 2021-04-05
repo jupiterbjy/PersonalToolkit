@@ -1,11 +1,11 @@
 import logging
 
-import pretty_errors
+# import pretty_errors
 import trio
 from MainUI import MainUIApp
 
 
-assert pretty_errors
+# assert pretty_errors
 
 SHOW_DEBUG_MSG = True
 logger = logging.getLogger("debug")

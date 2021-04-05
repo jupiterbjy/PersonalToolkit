@@ -59,7 +59,7 @@ class MainUI(BoxLayout, BackgroundManagerMixin):
         self.loaded_widget_reference.clear()
 
         for task_class in Loader.fetch_scripts():
-            self.loaded_widget_reference.append(InnerWidget(task_class(), self.send_ch))
+            self.loaded_widget_reference.append(InnerWidget(task_class, self.send_ch))
 
             self.listing_layout.add_widget(self.loaded_widget_reference[-1])
 

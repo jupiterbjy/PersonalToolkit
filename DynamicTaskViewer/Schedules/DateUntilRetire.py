@@ -11,8 +11,8 @@ mandatory military service.
 
 class TaskObject(ScheduledTask):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.name = "Served Ratio"
         self.parameters = {
             "Enroll": "2019-07-15",

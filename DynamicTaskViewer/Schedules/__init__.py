@@ -1,12 +1,20 @@
+from __future__ import annotations
+from typing import Callable
 import logging
-import trio
+
 
 logger = logging.getLogger("debug")
 
 
+class StopTask(Exception):
+    """
+    Exception to escape from continuous execution
+    """
+
+
 class ScheduledTask:
     """
-    Interface for task units.
+    Interface for task units. Inherit this to each py scripts for execution.
 
     # Below description is plan, not implemented
 
@@ -14,13 +22,14 @@ class ScheduledTask:
     it's up to user to convert param as they desire.
     """
 
-    def __init__(self):
+    def __init__(self, task_start_method: Callable):
         """
         Script will check output periodically.
         """
+        self.run = False
         self.name = ""
         self._parameters = dict()
-        self.run = True
+        self._task_starter = task_start_method
 
     def update_parameter(self, **kwargs):
         """
@@ -29,6 +38,16 @@ class ScheduledTask:
         """
         self._parameters.update(kwargs)
 
+    async def task_wrap(self):
+        """
+        Wraps task to check run conditions.
+        """
+
+        if self.run:
+            return await self.task()
+
+        raise StopTask()
+
     async def task(self):
         """
         Fill out your own actions here. Return value will be displayed on widget.
@@ -36,20 +55,29 @@ class ScheduledTask:
 
         return None
 
-    async def run_task(self):
+    def stop_task(self):
         """
-        Wrapper for task to add default click behavior.
+        Interface to raise StopTask.
         """
+        self.run = False
 
-        # This way, there will be so many if branches per update!
-        if self.run:
-            return await self.task()
+        raise StopTask()
 
-        await trio.sleep(2)
+    def start_task(self):
+        """
+        Interface to schedule execution of this task.
+        Will be overridden by widget.
+        """
+        self.run = True
+
+        self._task_starter()
 
     def on_click(self):
         """
-        Action to do when widget is pressed.
+        Action to do when widget is pressed. Default behavior is pause-resuming task.
         """
         self.run = not self.run
 
+        # in reverse!
+        if self.run:
+            self.start_task()

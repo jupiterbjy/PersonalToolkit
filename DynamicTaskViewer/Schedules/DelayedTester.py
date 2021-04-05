@@ -10,8 +10,8 @@ Simple text cycler
 
 
 class TaskObject(ScheduledTask):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.name = "Delay Tester"
         self.delay = 0.5
         self._msgs = deque("バカにする奴は嫌いだ  "

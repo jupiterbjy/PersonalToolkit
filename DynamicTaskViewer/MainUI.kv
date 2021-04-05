@@ -37,9 +37,12 @@
 		
 
 <InnerWidget>:
+    orientation: "vertical"
+    background_color: (0.5, 0.5, 0.5, 1)
+
 	canvas.before:
 		Color:
-			rgba: root.bg_color
+			rgba: root.background_color
 		Rectangle:
 			size: self.size
 			pos: self.pos
@@ -60,5 +63,5 @@
 		
 	Label:
 		id: inner_label_bottom
-		text: root.executed_count
+		text: str(root.executed_count)
 		font_name: "Font/NotoSansMonoCJKkr-Regular.otf"
