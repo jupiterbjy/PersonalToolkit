@@ -12,10 +12,10 @@ web to mere time calculations.
 ---
 
 ## Current State
-![](Demo/Demo.webp)
+![](Demo.webp)
 
 Demonstration of core structure. Features following:
-- Dynamic reload of scripts stored in [folder](DynamicTaskViewer/Schedules). Will update existing or add else to GUI.
+- Dynamic reload of scripts stored in [folder](Schedules). Will update existing or add else to GUI.
 - Proper start & stop of each script by use of ```trio.CancelScope```.
 - Continuity decided by each task, rather than outer loop polling each tasks for execution.
   Demonstrated above with different numbers of calls on each task.

@@ -1,0 +1,196 @@
+#:kivy 2.0.0
+#:import Factory kivy.factory.Factory
+
+<CustomBoxLayout@BoxLayout>
+    orientation: "horizontal"
+    padding: dp(10)
+    size_hint_y: None
+
+
+<DirSelector>:
+    BoxLayout:
+        orientation: "vertical"
+        FileChooserIconView:
+            id: dir_select_view
+            dirselect: True
+
+        CustomBoxLayout:
+            height: dp(50)
+            Button:
+                id: dir_select
+                text: "Select"
+                on_release: root.select(dir_select_view.path, dir_select_view.selection)
+
+            Button:
+                id: cancel_dir_select
+                text: "Cancel"
+                on_release: root.dismiss()
+
+
+<EditPopUp>:
+    text_field: cache_dir
+
+    auto_dismiss: False
+    title: root.title
+
+    height: dp(300)
+    size_hint_x: 0.9
+    size_hint_y: None
+
+    BoxLayout:
+        orientation: "vertical"
+
+        CustomBoxLayout:
+            height: dp(60)
+
+            Image:
+                canvas.before:
+                    Color:
+                        hsv: 217/360, 32/100, 63/100
+                    Rectangle:
+                        size: self.size
+                        pos: self.pos
+
+                id: icon
+                size: dp(40), dp(40)
+                size_hint_x: None
+                allow_stretch: True
+                mipmap: True
+                source: "icon/ftp.png"
+
+            Label:
+                id: drive_name
+                text: "DriveName"
+                size_hint_x: None
+
+
+            Widget:
+                # placeholder allowing stretch
+
+            Label:
+                text: "Auto Mount"
+                halign: "right"
+                size_hint_x: None
+
+            ToggleButton:
+                id: autorun_check
+                width: dp(100)
+                size_hint_x: None
+                halign: "right"
+                text: "Disabled" if self.state == "normal" else "Enabled"
+                state: "normal"
+
+        CustomBoxLayout:
+            height: dp(60)
+            spacing: dp(5)
+
+            TextInput:
+                id: cache_dir
+                multiline: False
+                hint_text: "Choose cache directory for this mount..."
+
+            Button:
+                id: open_dir_popup
+                size_hint_x: None
+                width: dp(100)
+                text: "Choose"
+                on_release: root.selector.open()
+
+        CustomBoxLayout:
+            height: dp(60)
+            spacing: dp(5)
+
+            Label:
+                text: "Drive Letter"
+                size_hint_x: None
+
+            TextInput:
+                id: letter_input
+                size_hint: None, None
+                size: dp(30), dp(30)
+                multiline: False
+                halign: "center"
+                valign: "center"
+                on_text: self.text = self.text[-1:].upper()
+
+                hint_text: "A"
+
+        Widget:
+            # placeholder allowing stretch
+
+        CustomBoxLayout:
+            height: dp(50)
+            valign: "top"
+
+            ToggleButton:
+                id: mount_toggle
+                text: "Mount" if self.state == "normal" else "Unmount"
+                state: "normal"
+                on_release: root.mount() if self.state == "normal" else root.unmount()
+
+            Button:
+                id: save_edit
+                text: "Save"
+                on_release: root.save()
+
+            Button:
+                id: cancel_edit
+                text: "Cancel"
+                on_release: root.dismiss()
+
+            Button:
+                id: delete:
+                text: "Delete"
+                color:
+                on_release: root.delete()
+
+
+<EntryRow>:
+    height: dp(100)
+    size_hint_y: None
+    padding: dp(5), 0
+
+    on_release: self.show_popup()
+
+    BoxLayout:
+        canvas.before:
+            Color:
+                hsv: 217/360, 32/100, 63/100
+            Rectangle:
+                size: self.size
+                pos: self.pos
+
+        orientation: "vertical"
+        Label:
+            text: "Letter"
+
+
+<GUI>:
+    list_widget: list_box
+
+    orientation: "horizontal"
+    BoxLayout:
+        size_hint_x: None
+        width: dp(80)
+        id: menu_box
+        orientation: "vertical"
+
+        Button:
+            id: add
+            text: "Add"
+            on_release: root.add_row()
+
+        Button:
+            id: mount_all
+            text: "mount all"
+            on_release: root.add_row()
+
+    ScrollView:
+        do_scroll_x: False
+        do_scroll_y: True
+
+        BoxLayout:
+            id: list_box
+            orientation: "vertical"
+            size_hint_y: None
+            spacing: dp(5)
